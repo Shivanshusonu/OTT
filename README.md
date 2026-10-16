@@ -206,20 +206,29 @@ The script:
 
 ---
 
+## Seed Synthetic Data
+
+If you don't have all the optional Kaggle CSVs (IMDb ratings, box office, awards), run the seed script after ingestion to generate realistic synthetic data for those tables so every dashboard page has something to display:
+
+```bash
+cd backend
+# Activate the venv first
+python seed_missing.py
+```
+
+The script:
+- Generates **IMDb-style ratings** for all titles that have no rating row
+- Generates **box office figures** for all movies that have no revenue row
+- Generates **award records** (wins + nominations) for a random subset of titles
+- Prints a final row-count table — restart uvicorn after running
+
+> Safe to re-run at any time. It clears and re-seeds only the three dependent tables, never touching `titles`, `genres`, `cast_members`, or `countries`.
+
+---
+
 ## Notes
 
 - The SQLite database file is created at `backend/ott_analytics.db` on first backend startup.
 - The Vite dev server proxies all `/api/*` requests to `http://localhost:8000`, eliminating CORS issues.
 - The ingestion script can be re-run any number of times — it always truncates before inserting.
 - No authentication, no cloud services, no AI/ML features — the entire app runs on localhost.
-
-
-cd C:\Users\shiva\OTT\backend
-.\.venv\Scripts\Activate.ps1
-python ingest.py
-uvicorn main:app --reload
-
-
-cd C:\Users\shiva\OTT\frontend
-$env:PATH = "C:\Program Files\nodejs;" + $env:PATH
-npm run dev
