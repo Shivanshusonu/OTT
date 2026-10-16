@@ -396,6 +396,14 @@ def main():
         ingest_netflix(db, NETFLIX_CSV)
         ingest_imdb_ratings(db, IMDB_TITLES_CSV, IMDB_RATINGS_CSV)
         ingest_box_office(db, BOX_OFFICE_CSV)
+
+        # Auto-seed synthetic ratings/box_office/awards if those tables are still empty
+        # (happens when the optional IMDb/TMDB CSVs are not present)
+        import seed_missing
+        if db.query(Rating).count() == 0:
+            print("\nNo ratings found after ingestion — running synthetic seed …")
+            seed_missing.seed(db)
+
         print("\nFinal row counts:")
         print_row_counts(db)
     finally:

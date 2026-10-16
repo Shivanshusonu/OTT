@@ -132,6 +132,20 @@ def print_counts(db):
         print(f"  {tbl:<20} {n:>8,}")
 
 
+def seed(db):
+    """Seed ratings, box_office, awards using an existing DB session.
+    Clears the three tables first then re-populates from all current titles.
+    Called by main.py on startup when tables are empty, and by main() below.
+    """
+    titles = db.query(Title).all()
+    if not titles:
+        return
+    clear_tables(db)
+    seed_ratings(db, titles)
+    seed_box_office(db, titles)
+    seed_awards(db, titles)
+
+
 def main():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
@@ -141,10 +155,7 @@ def main():
             print("ERROR: No titles found. Run ingest.py first, then re-run this script.")
             return
         print(f"Found {len(titles)} titles in DB.\n")
-        clear_tables(db)
-        seed_ratings(db, titles)
-        seed_box_office(db, titles)
-        seed_awards(db, titles)
+        seed(db)
         print("=" * 40)
         print_counts(db)
         print("=" * 40)

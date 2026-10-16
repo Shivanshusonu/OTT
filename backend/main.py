@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import Base, engine
+from database import Base, engine, SessionLocal
 import models  # noqa: F401 — registers all ORM classes with Base.metadata
+from models import Rating, BoxOffice, Award, Title
 
 from routers import catalog, ratings, boxoffice, platforms, genres, cast, runtime, awards
 
@@ -29,6 +30,22 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
+    # Auto-seed synthetic data if dependent tables are empty but titles exist
+    db = SessionLocal()
+    try:
+        has_titles = db.query(Title.id).first() is not None
+        needs_seed = (
+            has_titles
+            and db.query(Rating.id).first() is None
+            and db.query(BoxOffice.id).first() is None
+            and db.query(Award.id).first() is None
+        )
+        if needs_seed:
+            import seed_missing
+            seed_missing.seed(db)
+            print("[startup] Auto-seeded ratings, box_office, awards.")
+    finally:
+        db.close()
 
 
 @app.get("/health")
